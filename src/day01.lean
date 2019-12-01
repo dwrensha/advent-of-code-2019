@@ -18,3 +18,18 @@ def iter : list ℕ → ℤ → option string
 | (n::ns) z := iter ns ((module_fuel $ int.of_nat n) + z)
 
 #eval day1 $ λ l, iter l 0
+
+
+meta def module_total_fuel : ℤ → ℤ
+| mass :=
+  let f := module_fuel mass in
+  if f ≤ 0 then 0
+  else let subfuel := module_total_fuel f in
+       subfuel + f
+
+
+meta def iter2 : list ℕ → ℤ → option string
+| [] z := some $ to_string z
+| (n::ns) z := iter2 ns ((module_total_fuel $ int.of_nat n) + z)
+
+#eval day1 $ λ l, iter2 l 0
