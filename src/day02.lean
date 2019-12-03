@@ -45,6 +45,20 @@ else
   to_string (nth final 0)
 
 
-#eval day02 $ λ l,
-  some (list.foldl (λ a: string, λb : ℕ, a ++ (to_string b) ++ ",") "" l)
+--#eval day02 $ λ l,   some (list.foldl (λ a: string, λb : ℕ, a ++ (to_string b) ++ ",") "" l)
+
+meta def do_with_inputs : list ℕ → ℕ → ℕ → ℕ
+| l inp1 inp2 :=
+  let l' := replace_nth l 1 inp1 in
+  let l'' := replace_nth l' 2 inp2 in
+  let final := execute l'' 0 in
+  nth final 0
+
+meta def iter (mem: list ℕ) (goal: ℕ) : ℕ → ℕ → option string
+| 100 100 := none
+| 100 n := iter 0 (n+1)
+| n m := if do_with_inputs mem n m = goal then some (to_string (100 * n + m))
+                     else iter (n+1) m
+
+#eval day02 $ λ l, iter l 19690720 0 0
 
