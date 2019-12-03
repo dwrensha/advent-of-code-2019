@@ -20,7 +20,7 @@ def parse_step : parser step :=
   do
     c ← one_of ['R', 'L', 'U', 'D'],
     n ← parse_number,
-    trace ((to_string c) ++ (to_string n)) (return ()),
+    --trace ((to_string c) ++ (to_string n)) (return ()),
     return (match c with | 'R' := step.right n
                          | 'L' := step.left n
                          | 'U' := step.up n
@@ -33,6 +33,7 @@ def parse_wires : parser (list step × list step) :=
    wire1 ← sep_by (ch ',') parse_step,
    ch '\n',
    wire2 ← sep_by (ch ',') parse_step,
+   ch '\n',
    return ⟨wire1, wire2⟩
 
 def day03 := go "day03.txt" parse_wires
