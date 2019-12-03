@@ -64,8 +64,8 @@ meta def iter (mem: list ℕ) (goal: ℕ) : ℕ → ℕ → option string
 
 -- let's try to do it faster...
 
-def read_or_sorry {s : ℕ} (m: array s ℕ) (idx: ℕ) : ℕ :=
-if h : idx < s then m.read ⟨idx, h⟩ else sorry
+def read_or_sorry {s: ℕ} {A: Type} (m: array s A) (idx: ℕ) : A :=
+if h: idx < s then m.read ⟨idx, h⟩ else sorry
 
 def write_or_sorry {s : ℕ} (m : array s ℕ) (idx : ℕ) (new_value : ℕ) : array s ℕ :=
 if h : idx < s then m.write ⟨idx, h⟩ new_value else sorry
