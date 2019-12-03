@@ -60,5 +60,60 @@ meta def iter (mem: list ℕ) (goal: ℕ) : ℕ → ℕ → option string
 | n m := if do_with_inputs mem n m = goal then some (to_string (100 * n + m))
                      else iter (n+1) m
 
-#eval day02 $ λ l, iter l 19690720 0 0
+-- #eval day02 $ λ l, iter l 19690720 0 0
 
+-- let's try to do it faster...
+
+def read_or_sorry {s : ℕ} (m: array s ℕ) (idx: ℕ) : ℕ :=
+if h : idx < s then m.read ⟨idx, h⟩ else sorry
+
+def write_or_sorry {s : ℕ} (m : array s ℕ) (idx : ℕ) (new_value : ℕ) : array s ℕ :=
+if h : idx < s then m.write ⟨idx, h⟩ new_value else sorry
+
+meta def array_execute {s : ℕ} : array s ℕ → ℕ → array s ℕ
+| m idx :=
+let x := read_or_sorry m idx in
+if x = 99 then m
+else
+  let arg1 := read_or_sorry m (idx + 1) in
+  let arg2 := read_or_sorry m (idx + 2) in
+  let arg3 := read_or_sorry m (idx + 3) in
+  let inp1 := read_or_sorry m arg1 in
+  let inp2 := read_or_sorry m arg2 in
+  let new_value := if x = 1 then inp1 + inp2
+                   else if x = 2 then inp1 * inp2
+                   else sorry in
+  let new_array := write_or_sorry m arg3 new_value in
+  array_execute new_array (idx + 4)
+
+
+def list_to_array_helper {s : ℕ} : (array s ℕ) → ℕ → list ℕ → array s ℕ
+| a _ [] := a
+| a idx (c::cs) := list_to_array_helper (write_or_sorry a idx c) (idx + 1) cs
+
+def list_to_array (l : list ℕ) : array (list.length l) ℕ :=
+  let len := list.length l in
+  let zeros : array len ℕ := ⟨λ _, 0⟩ in
+  list_to_array_helper zeros 0 l
+
+#eval day02 $ λ l,
+  let l' := replace_nth l 1 12 in
+  let l'' := replace_nth l' 2 2 in
+  let final := array_execute (list_to_array l'') 0 in
+  to_string (read_or_sorry final 0)
+
+
+meta def array_do_with_inputs {s : ℕ} : array s ℕ → ℕ → ℕ → ℕ
+| a inp1 inp2 :=
+  let a' := write_or_sorry a 1 inp1 in
+  let a'' := write_or_sorry a' 2 inp2 in
+  let final := array_execute a'' 0 in
+  read_or_sorry final 0
+
+meta def array_iter {s : ℕ} (mem: array s ℕ) (goal: ℕ) : ℕ → ℕ → option string
+| 100 100 := none
+| 100 n := array_iter 0 (n+1)
+| n m := if array_do_with_inputs mem n m = goal then some (to_string (100 * n + m))
+                     else array_iter (n+1) m
+
+#eval day02 $ λ l, array_iter (list_to_array l) 19690720 0 0
