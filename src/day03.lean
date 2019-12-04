@@ -73,8 +73,30 @@ def find_closest (wire1_tree: rbtree (ℤ×ℤ)) : ℤ×ℤ → (ℤ×ℤ) → �
     new_closest
   else prev_closest
 
+--#eval day03 $ λ wires,
+--  let map := construct_map wires.1 ⟨0,0⟩ (mk_rbtree _ _) in
+--  let closest_pos := walk_wire (find_closest map) wires.2 ⟨0,0⟩ ⟨100000000,10000000⟩ in
+--  let dist := manhattan closest_pos in
+--  some $ to_string dist
+
+
+meta def construct_map2 : list step → ℤ×ℤ → ℤ × (rbmap (ℤ × ℤ) ℤ) → ℤ × rbmap (ℤ × ℤ) ℤ :=
+walk_wire (λ pos acc,
+  if acc.2.contains pos then ⟨acc.1 + 1, acc.2⟩
+  else ⟨acc.1 + 1, acc.2.insert pos acc.1⟩)
+
+--                                                (dist, prev_best)
+def find_closest2 (wire1_map: rbmap (ℤ×ℤ) ℤ) : ℤ×ℤ → (ℤ×ℤ) → (ℤ×ℤ)
+| new_pos acc :=
+  match wire1_map.find new_pos with
+     | some wire_1_dist :=
+           let new_dist := wire_1_dist + acc.1 in
+           let new_best := if new_dist < acc.2 then new_dist else acc.2 in
+           ⟨acc.1 + 1, new_best⟩
+     | none := ⟨acc.1 + 1, acc.2⟩
+  end
+
 #eval day03 $ λ wires,
-  let map := construct_map wires.1 ⟨0,0⟩ (mk_rbtree _ _) in
-  let closest_pos := walk_wire (find_closest map) wires.2 ⟨0,0⟩ ⟨100000000,10000000⟩ in
-  let dist := manhattan closest_pos in
-  some $ to_string dist
+  let ⟨_, map⟩ := construct_map2 wires.1 ⟨0,0⟩ ⟨0, (mk_rbmap _ _)⟩ in
+  let ⟨_, closest⟩ := walk_wire (find_closest2 map) wires.2 ⟨0,0⟩ ⟨0,10000000⟩ in
+  some $ to_string closest
