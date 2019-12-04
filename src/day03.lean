@@ -62,20 +62,19 @@ meta def walk_wire {T : Type} (f: ℤ×ℤ → T → T) : list step → ℤ×ℤ
 meta def construct_map : list step → ℤ×ℤ → rbtree (ℤ × ℤ) → rbtree (ℤ × ℤ) :=
 walk_wire (λ pos acc, acc.insert pos)
 
-def abs (z : ℤ) : ℤ :=
-if z < 0 then -z else z
-
 def manhattan (p : ℤ×ℤ) : ℤ :=
 abs (p.1) + abs (p.2)
 
 def find_closest (wire1_tree: rbtree (ℤ×ℤ)) : ℤ×ℤ → (ℤ×ℤ) → ℤ×ℤ
 | new_pos prev_closest :=
-  let new_manhattan := manhattan new_pos in
-  let new_closest := if new_manhattan < manhattan prev_closest then new_pos else prev_closest in
-  new_closest
+  if wire1_tree.contains new_pos then
+    let new_manhattan := manhattan new_pos in
+    let new_closest := if new_manhattan < manhattan prev_closest then new_pos else prev_closest in
+    new_closest
+  else prev_closest
 
 #eval day03 $ λ wires,
   let map := construct_map wires.1 ⟨0,0⟩ (mk_rbtree _ _) in
-  let closest_pos := walk_wire (find_closest map) wires.2 ⟨0,0⟩ ⟨100000000,10000000⟩in
+  let closest_pos := walk_wire (find_closest map) wires.2 ⟨0,0⟩ ⟨100000000,10000000⟩ in
   let dist := manhattan closest_pos in
   some $ to_string dist
