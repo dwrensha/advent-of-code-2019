@@ -39,3 +39,43 @@ def parse_wires : parser (list step × list step) :=
 def day03 := go "day03.txt" parse_wires
 
 #eval day03 $ λ _, some "SUCCESS"
+
+meta def walk_wire {T : Type} (f: ℤ×ℤ → T → T) : list step → ℤ×ℤ → T → T
+| [] _ acc := acc
+| ( (step.left 0)::ss) cur_pos acc := walk_wire ss cur_pos acc
+| ( (step.right 0)::ss) cur_pos acc := walk_wire ss cur_pos acc
+| ( (step.up 0)::ss) cur_pos acc := walk_wire ss cur_pos acc
+| ( (step.down 0)::ss) cur_pos acc := walk_wire ss cur_pos acc
+| ( (step.left (succ s))::ss) cur_pos acc :=
+ let new_pos : ℤ × ℤ := ⟨cur_pos.1 - 1, cur_pos.2⟩ in
+ walk_wire ((step.left s)::ss) new_pos (f new_pos acc)
+| ( (step.right (succ s))::ss) cur_pos acc :=
+ let new_pos : ℤ × ℤ := ⟨cur_pos.1 + 1, cur_pos.2⟩ in
+ walk_wire ((step.right s)::ss) new_pos (f new_pos acc)
+| ( (step.up (succ s))::ss) cur_pos acc :=
+ let new_pos : ℤ × ℤ := ⟨cur_pos.1, cur_pos.2 + 1⟩ in
+ walk_wire ((step.up s)::ss) new_pos (f new_pos acc)
+| ( (step.down (succ s))::ss) cur_pos acc :=
+ let new_pos : ℤ × ℤ := ⟨cur_pos.1, cur_pos.2 - 1⟩ in
+ walk_wire ((step.down s)::ss) new_pos (f new_pos acc)
+
+meta def construct_map : list step → ℤ×ℤ → rbtree (ℤ × ℤ) → rbtree (ℤ × ℤ) :=
+walk_wire (λ pos acc, acc.insert pos)
+
+def abs (z : ℤ) : ℤ :=
+if z < 0 then -z else z
+
+def manhattan (p : ℤ×ℤ) : ℤ :=
+abs (p.1) + abs (p.2)
+
+def find_closest (wire1_tree: rbtree (ℤ×ℤ)) : ℤ×ℤ → (ℤ×ℤ) → ℤ×ℤ
+| new_pos prev_closest :=
+  let new_manhattan := manhattan new_pos in
+  let new_closest := if new_manhattan < manhattan prev_closest then new_pos else prev_closest in
+  new_closest
+
+#eval day03 $ λ wires,
+  let map := construct_map wires.1 ⟨0,0⟩ (mk_rbtree _ _) in
+  let closest_pos := walk_wire (find_closest map) wires.2 ⟨0,0⟩ ⟨100000000,10000000⟩in
+  let dist := manhattan closest_pos in
+  some $ to_string dist
